@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.StreamSupport;
 
@@ -23,14 +24,14 @@ public class UserService{
     @Transactional
     public void createAdminIfNotPresent()
     {
-        if(!userRepository.findById(1).isPresent())
+        if(Objects.isNull(userRepository.getById(1)))
             userRepository.save(new User(1,"admin","admin",true,false));
     }
 
     @Transactional
     public boolean adminLogin(String username,String password)
     {
-        User user = userRepository.findById(1).get();
+        User user = userRepository.getById(1);
         boolean valid = user.getUsername().equals(username) && user.getPassword().equals(password);
         user.setLoggedIn(valid);
         return valid;
@@ -40,14 +41,14 @@ public class UserService{
     public String signOut()
     {
         String result;
-        Optional<User> user = getLoggedInUser();
+        User user = getLoggedInUser();
 
-        if(user.isPresent())
+        if(!Objects.isNull(user))
         {
-            if (user.get().isAdmin())
+            if (user.isAdmin())
             {
-                user.get().setLoggedIn(false);
-                result = String.format("Sign out successful with privileged account %s", user.get().getUsername());
+                user.setLoggedIn(false);
+                result = String.format("Sign out successful with privileged account %s", user.getUsername());
             }
             else result = "You do not have privilege to use this command";
         }
@@ -60,20 +61,25 @@ public class UserService{
     }
 
     @Transactional
-    public Optional<User> getLoggedInUser()
+    public User getLoggedInUser()
     {
-        return StreamSupport.stream(userRepository.findAll().spliterator(), false)
+        var result = new User();
+        var user = StreamSupport.stream(userRepository.findAll().spliterator(), false)
                 .filter(u -> u.isLoggedIn())
                 .findFirst();
+        if (user.isPresent()) result = user.get();
+        else result = null;
+
+        return result;
     }
 
     public boolean isLoggedInUserAdmin()
     {
         boolean result = false;
-        Optional<User> user = getLoggedInUser();
-        if(user.isPresent())
+        User user = getLoggedInUser();
+        if(!Objects.isNull(user))
         {
-            result = user.get().isAdmin();
+            result = user.isAdmin();
         }
 
         return result;

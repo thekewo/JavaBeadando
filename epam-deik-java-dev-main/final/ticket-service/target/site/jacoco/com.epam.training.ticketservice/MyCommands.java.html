@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="hu"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>MyCommands.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">ticket-service</a> &gt; <a href="index.source.html" class="el_package">com.epam.training.ticketservice</a> &gt; <span class="el_source">MyCommands.java</span></div><h1>MyCommands.java</h1><pre class="source lang-java linenums">package com.epam.training.ticketservice;
+
+import com.epam.training.ticketservice.controller.MovieController;
+import com.epam.training.ticketservice.controller.RoomController;
+import com.epam.training.ticketservice.controller.ScreeningController;
+import com.epam.training.ticketservice.controller.UserController;
+import com.epam.training.ticketservice.model.Movie;
+import com.epam.training.ticketservice.model.Room;
+import com.epam.training.ticketservice.model.Screening;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.shell.standard.ShellMethod;
+import org.springframework.shell.standard.ShellComponent;
+
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.List;
+import java.util.Locale;
+
+@ShellComponent
+public class MyCommands {
+
+    private MovieController movieController;
+    private UserController userController;
+    private RoomController roomController;
+    private ScreeningController screeningController;
+<span class="nc" id="L27">    private SimpleDateFormat formatter = new SimpleDateFormat(&quot;yyyy-MM-dd HH:mm&quot;);</span>
+
+    @Autowired
+    public MyCommands(
+            MovieController movieController,
+            UserController userController,
+            RoomController roomController,
+            ScreeningController screeningController)
+<span class="nc" id="L35">    {</span>
+<span class="nc" id="L36">        this.movieController = movieController;</span>
+<span class="nc" id="L37">        this.userController = userController;</span>
+<span class="nc" id="L38">        this.roomController = roomController;</span>
+<span class="nc" id="L39">        this.screeningController = screeningController;</span>
+<span class="nc" id="L40">    }</span>
+
+    @ShellMethod(value = &quot;Exit application.&quot;, key = &quot;exit&quot;)
+    public void exit() {
+<span class="nc" id="L44">        System.exit(0);</span>
+<span class="nc" id="L45">    }</span>
+
+    @ShellMethod(value = &quot;Login admin user.&quot;, key = &quot;sign in privileged&quot;)
+    public String signInPrivileged(String username, String password) {
+<span class="nc" id="L49">        return userController.adminLogin(username,password);</span>
+    }
+
+    @ShellMethod(value = &quot;Sign out admin user.&quot;, key = &quot;sign out&quot;)
+    public String signOutPrivileged() {
+<span class="nc" id="L54">        return userController.signOut();</span>
+    }
+
+    @ShellMethod(value = &quot;Describe account.&quot;, key = &quot;describe account&quot;)
+    public String describeAccount() {
+<span class="nc" id="L59">        return userController.describeAccount();</span>
+    }
+
+    @ShellMethod(value = &quot;Create movie.&quot;, key = &quot;create movie&quot;)
+    public void createMovie(String name, String type, int movie_lenght) {
+<span class="nc" id="L64">        movieController.createMovie(name, type, movie_lenght);</span>
+<span class="nc" id="L65">    }</span>
+
+    @ShellMethod(value = &quot;Update movie.&quot;, key = &quot;update movie&quot;)
+    public void updateMovie(String name, String type, int movie_lenght) {
+<span class="nc" id="L69">        movieController.updateMovie(name, type, movie_lenght);</span>
+<span class="nc" id="L70">    }</span>
+
+    @ShellMethod(value = &quot;Delete movie.&quot;, key = &quot;delete movie&quot;)
+    public void deleteMovie(String name) {
+<span class="nc" id="L74">        movieController.deleteMovie(name);</span>
+<span class="nc" id="L75">    }</span>
+
+    @ShellMethod(value = &quot;List movies.&quot;, key = &quot;list movies&quot;)
+    public void listMovies() {
+
+<span class="nc" id="L80">        List&lt;Movie&gt; movies = movieController.getAllMovies();</span>
+<span class="nc bnc" id="L81" title="All 2 branches missed.">        if(movies.size() == 0)</span>
+        {
+<span class="nc" id="L83">            System.out.println(&quot;There are no movies at the moment\n&quot;);</span>
+        }
+        else {
+<span class="nc bnc" id="L86" title="All 2 branches missed.">            for (Movie movie : movies) {</span>
+<span class="nc" id="L87">                System.out.println(String.format(&quot;%s (%s, %s minutes)\n&quot;,</span>
+<span class="nc" id="L88">                        movie.getName(), movie.getType(),</span>
+<span class="nc" id="L89">                        movie.getMovie_length()));</span>
+<span class="nc" id="L90">            }</span>
+        }
+<span class="nc" id="L92">    }</span>
+
+    @ShellMethod(value = &quot;Create room.&quot;, key = &quot;create room&quot;)
+    public void createRoom(String name, int rows, int columns) {
+<span class="nc" id="L96">        roomController.createRoom(name, rows, columns);</span>
+<span class="nc" id="L97">    }</span>
+
+    @ShellMethod(value = &quot;Update room.&quot;, key = &quot;update room&quot;)
+    public void updateRoom(String name, int rows, int columns) {
+<span class="nc" id="L101">        roomController.updateRoom(name, rows, columns);</span>
+<span class="nc" id="L102">    }</span>
+
+    @ShellMethod(value = &quot;Delete room.&quot;, key = &quot;delete room&quot;)
+    public void deleteRoom(String name) {
+<span class="nc" id="L106">        roomController.deleteRoom(name);</span>
+<span class="nc" id="L107">    }</span>
+
+    @ShellMethod(value = &quot;List rooms.&quot;, key = &quot;list rooms&quot;)
+    public void listRooms() {
+
+<span class="nc" id="L112">        List&lt;Room&gt; rooms = roomController.getAllRooms();</span>
+<span class="nc bnc" id="L113" title="All 2 branches missed.">        if(rooms.size() == 0)</span>
+        {
+<span class="nc" id="L115">            System.out.println(&quot;There are no rooms at the moment\n&quot;);</span>
+        }
+        else {
+<span class="nc bnc" id="L118" title="All 2 branches missed.">            for (Room room : rooms) {</span>
+<span class="nc" id="L119">                System.out.println(String.format(&quot;Room %s with %d seats, %d rows and %d columns\n&quot;,</span>
+<span class="nc" id="L120">                        room.getName(), room.getRows()*room.getColumns(), room.getRows(), room.getColumns()));</span>
+<span class="nc" id="L121">            }</span>
+        }
+<span class="nc" id="L123">    }</span>
+
+    @ShellMethod(value = &quot;Create screening.&quot;, key = &quot;create screening&quot;)
+    public void createScreening(String movieName, String roomName, String date){
+        try {
+<span class="nc" id="L128">            Date parsedDate = formatter.parse(date);</span>
+<span class="nc" id="L129">            screeningController.createScreening(movieName, roomName, parsedDate);</span>
+        }
+<span class="nc" id="L131">        catch (Exception e)</span>
+        {
+<span class="nc" id="L133">            e.printStackTrace();</span>
+<span class="nc" id="L134">        }</span>
+<span class="nc" id="L135">    }</span>
+
+    @ShellMethod(value = &quot;Delete screening.&quot;, key = &quot;create delete&quot;)
+    public void deleteScreening(String movieName) {
+<span class="nc" id="L139">        screeningController.deleteScreening(movieName);</span>
+<span class="nc" id="L140">    }</span>
+
+    @ShellMethod(value = &quot;List screenings.&quot;, key = &quot;list screenings&quot;)
+    public void listScreening() {
+
+<span class="nc" id="L145">        List&lt;Screening&gt; screenings = screeningController.getAllScreening();</span>
+<span class="nc bnc" id="L146" title="All 2 branches missed.">        if(screenings.size() == 0)</span>
+        {
+<span class="nc" id="L148">            System.out.println(&quot;There are no screenings&quot;);</span>
+        }
+        else {
+<span class="nc bnc" id="L151" title="All 2 branches missed.">            for (Screening screening : screenings) {</span>
+
+<span class="nc" id="L153">                var wat = screening.getScreeningDate();</span>
+<span class="nc" id="L154">                var wat2 = formatter.format(screening.getScreeningDate());</span>
+
+<span class="nc" id="L156">                Movie movie = movieController.getMovieByName(screening.getMovieName());</span>
+<span class="nc" id="L157">                System.out.println(String.format(&quot;%s (%s, %d minutes), screened in room %s, at %s&quot;,</span>
+<span class="nc" id="L158">                        movie.getName(), movie.getType(),</span>
+<span class="nc" id="L159">                        movie.getMovie_length(), screening.getRoomName(),</span>
+<span class="nc" id="L160">                        formatter.format(screening.getScreeningDate())));</span>
+<span class="nc" id="L161">            }</span>
+        }
+<span class="nc" id="L163">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.6.202009150832</span></div></body></html>

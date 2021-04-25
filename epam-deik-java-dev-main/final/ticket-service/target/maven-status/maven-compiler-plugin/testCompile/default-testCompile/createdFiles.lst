@@ -1,0 +1,6 @@
+com\epam\training\ticketservice\controller\MovieControllerTest.class
+com\epam\training\ticketservice\controller\UserControllerTest.class
+com\epam\training\ticketservice\service\RoomServiceTest.class
+com\epam\training\ticketservice\service\ScreeningServiceTest.class
+com\epam\training\ticketservice\service\MovieServiceTest.class
+com\epam\training\ticketservice\service\UserServiceTest.class

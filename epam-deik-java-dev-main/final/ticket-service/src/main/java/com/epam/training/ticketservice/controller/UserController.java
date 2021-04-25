@@ -6,6 +6,7 @@ import com.epam.training.ticketservice.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.StreamSupport;
 
@@ -33,11 +34,11 @@ public class UserController {
     public String describeAccount()
     {
         String result;
-        Optional<User> user = userService.getLoggedInUser();
-        if(user.isPresent())
+        User user = userService.getLoggedInUser();
+        if(!Objects.isNull(user))
         {
-            if(user.get().isAdmin())
-                result = String.format("Signed in with privileged account '%s'", user.get().getUsername());
+            if(user.isAdmin())
+                result = String.format("Signed in with privileged account '%s'", user.getUsername());
             else result = "You are not signed in";
         }
         else
