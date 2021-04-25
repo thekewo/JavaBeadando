@@ -95,20 +95,6 @@ class UserServiceTest {
     }
 
     @Test
-    void signOutIfAdminIsntSignedIn() {
-        User user = new User(1,"admin","admin",true,false);
-        ArrayList<User> userIterable = new ArrayList<>();
-        userIterable.add(user);
-        when(userRepository.save(any(User.class))).thenReturn(new User(1,"admin","admin",true,false));
-        when(userRepository.getById(1)).thenReturn(user);
-        doReturn(userIterable).when(userRepository).findAll();
-
-        String result = userService.signOut();
-
-        assertEquals(result,"You do not have privilege to use this command");
-    }
-
-    @Test
     void signOutIfNoUsers() {
         ArrayList<User> userIterable = new ArrayList<>();
         doReturn(userIterable).when(userRepository).findAll();
@@ -120,10 +106,33 @@ class UserServiceTest {
 
     @Test
     void getLoggedInUser() {
+        User admin = new User(1,"admin","admin",true,true);
+        User user = new User(2,"b","b",false,false);
+        ArrayList<User> userIterable = new ArrayList<>();
+        userIterable.add(admin);
+        userIterable.add(user);
+        when(userRepository.save(any(User.class))).thenReturn(admin);
+        when(userRepository.getById(1)).thenReturn(admin);
+        doReturn(userIterable).when(userRepository).findAll();
+
+        var result = userService.getLoggedInUser();
+
+        assertEquals(result,admin);
     }
 
     @Test
     void isLoggedInUserAdmin() {
+        User admin = new User(1,"admin","admin",true,true);
+        User user = new User(2,"b","b",false,false);
+        ArrayList<User> userIterable = new ArrayList<>();
+        userIterable.add(admin);
+        userIterable.add(user);
+        when(userRepository.save(any(User.class))).thenReturn(admin);
+        when(userRepository.getById(1)).thenReturn(admin);
+        doReturn(userIterable).when(userRepository).findAll();
 
+        var result = userService.isLoggedInUserAdmin();
+
+        assertEquals(result,true);
     }
 }
