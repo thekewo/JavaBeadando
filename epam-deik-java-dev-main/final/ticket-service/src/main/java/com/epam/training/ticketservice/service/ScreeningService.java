@@ -29,9 +29,16 @@ public class ScreeningService {
     }
 
     @Transactional
-    public void deleteScreening(String movieName)
+    public void deleteScreening(String movieName, String roomName, Date screeningDate)
     {
-        screeningRepository.delete(screeningRepository.findByMovieName(movieName));
+        var screening = StreamSupport
+                .stream(screeningRepository.findAll().spliterator(), false)
+                .filter(s -> s.getMovieName().equals(movieName) &&
+                        s.getRoomName().equals(roomName)  &&
+                        s.getScreeningDate().getTime() == screeningDate.getTime())
+                .findAny();
+
+        if(screening.isPresent()) screeningRepository.delete(screening.get());
     }
 
     @Transactional

@@ -60,7 +60,7 @@ class ScreeningServiceTest {
         when(screeningRepository.findAll()).thenReturn(screeningList);
 
         screeningService.createScreening("m","r",today);
-        screeningService.deleteScreening(screening.getMovieName());
+        screeningService.deleteScreening(screening.getMovieName(),screening.getRoomName(),screening.getScreeningDate());
         var result = screeningService.findAll();
 
         assertTrue(result.spliterator().estimateSize() == 0);

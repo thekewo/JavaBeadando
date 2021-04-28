@@ -10,6 +10,7 @@ import com.epam.training.ticketservice.model.Screening;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.shell.standard.ShellMethod;
 import org.springframework.shell.standard.ShellComponent;
+import org.springframework.stereotype.Component;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -17,6 +18,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
+@Component
 @ShellComponent
 public class MyCommands {
 
@@ -39,10 +41,10 @@ public class MyCommands {
         this.screeningController = screeningController;
     }
 
-    @ShellMethod(value = "Exit application.", key = "exit")
-    public void exit() {
-        System.exit(0);
-    }
+//    @ShellMethod(value = "Exit application.", key = "exit")
+//    public void exit() {
+//        System.exit(0);
+//    }
 
     @ShellMethod(value = "Login admin user.", key = "sign in privileged")
     public String signInPrivileged(String username, String password) {
@@ -134,9 +136,16 @@ public class MyCommands {
         }
     }
 
-    @ShellMethod(value = "Delete screening.", key = "create delete")
-    public void deleteScreening(String movieName) {
-        screeningController.deleteScreening(movieName);
+    @ShellMethod(value = "Delete screening.", key = "delete screening")
+    public void deleteScreening(String movieName, String roomName, String date){
+        try {
+            Date parsedDate = formatter.parse(date);
+            screeningController.deleteScreening(movieName, roomName, parsedDate);
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+        }
     }
 
     @ShellMethod(value = "List screenings.", key = "list screenings")

@@ -1,21 +1,17 @@
 package com.epam.training.ticketservice.controller;
 
-import com.epam.training.ticketservice.helper.CalendarEventOverlapHelper;
-import com.epam.training.ticketservice.model.DateInterval;
 import com.epam.training.ticketservice.model.Movie;
 import com.epam.training.ticketservice.model.Screening;
-import com.epam.training.ticketservice.repository.MovieRepository;
-import com.epam.training.ticketservice.repository.RoomRepository;
-import com.epam.training.ticketservice.repository.ScreeningRepository;
 import com.epam.training.ticketservice.service.MovieService;
 import com.epam.training.ticketservice.service.RoomService;
 import com.epam.training.ticketservice.service.ScreeningService;
 import com.epam.training.ticketservice.service.UserService;
+import org.joda.time.DateTime;
+import org.joda.time.Interval;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -28,25 +24,23 @@ public class ScreeningController {
     private MovieService movieService;
     private RoomService roomService;
     private UserService userService;
-    private CalendarEventOverlapHelper calendarEventOverlapHelper;
 
     @Autowired
     public ScreeningController(
             ScreeningService screeningService,
             MovieService movieService,
             RoomService roomService,
-            UserService userService,
-            CalendarEventOverlapHelper calendarEventOverlapHelper)
+            UserService userService)
     {
         this.screeningService = screeningService;
         this.userService = userService;
         this.roomService = roomService;
         this.movieService = movieService;
-        this.calendarEventOverlapHelper = calendarEventOverlapHelper;
     }
 
     public void createScreening(String movieName, String roomName, Date screeningDate)
     {
+        Date screeningDateForCreate = new Date(screeningDate.getTime());
         Movie movie = movieService.findByName(movieName);
         if(userService.isLoggedInUserAdmin())
         {
@@ -61,7 +55,7 @@ public class ScreeningController {
                     System.out.println("This would start in the break period after another screening in this room");
                 } else
                 {
-                    screeningService.createScreening(movieName, roomName, screeningDate);
+                    screeningService.createScreening(movieName, roomName, screeningDateForCreate);
                 }
             }
         }
@@ -69,14 +63,12 @@ public class ScreeningController {
 
     private boolean isOverlapping(Date screeningDateStart, String roomName, Movie movie)
     {
-        List<DateInterval> dateIntervals = new ArrayList<DateInterval>();
-
+        List<Interval> dateIntervals = new ArrayList<>();
         Date screeningDateEnd = new Date(screeningDateStart.getTime());
         screeningDateEnd.setMinutes(screeningDateEnd.getMinutes() + movie.getMovie_length());
 
-        DateInterval screeningDate = new DateInterval(screeningDateStart,screeningDateEnd);
-
-        dateIntervals.add(screeningDate);
+        Interval interval = new Interval(new DateTime(screeningDateStart),new DateTime(screeningDateEnd));
+        dateIntervals.add(interval);
 
         List<Movie> movies = StreamSupport
                 .stream(movieService.findAll().spliterator(), false)
@@ -84,32 +76,46 @@ public class ScreeningController {
 
         List<Screening> screeningList = StreamSupport
                 .stream(screeningService.findAll().spliterator(), false)
-                .filter(s -> s.getRoomName() == roomName)
+                .filter(s -> s.getRoomName().equals(roomName))
                 .collect(Collectors.toList());
 
         for (Screening screening : screeningList
              ) {
-            var optionalMovie = movies.stream().filter(m -> m.getName() == screening.getMovieName()).findFirst();
+            var optionalMovie = movies.stream().filter(m -> m.getName().equals(screening.getMovieName())).findFirst();
             if(optionalMovie.isPresent())
             {
-                dateIntervals.add(new DateInterval(screening.getScreeningDate(),screening.addMinutes(optionalMovie.get().getMovie_length())));
+                Date startDateToAdd = new Date(screening.getScreeningDate().getTime());
+                Date endDateToAdd = screening.addMinutes(optionalMovie.get().getMovie_length());
+                dateIntervals.add(new Interval(new DateTime(startDateToAdd),new DateTime(endDateToAdd)));
             }
         }
 
-        return !calendarEventOverlapHelper.isIntervalsClean(dateIntervals);
+        var result = false;
+        if(dateIntervals.size() > 1) result = overlapping(dateIntervals);
+
+        return result;
+    }
+
+    private boolean overlapping(List<Interval> dateIntervals)
+    {
+        var result = false;
+        var newInterval = dateIntervals.get(0);
+        dateIntervals.remove(0);
+        for (Interval interval : dateIntervals
+        ){
+            if(newInterval.overlaps(interval)) result = true;
+        }
+        return result;
     }
 
     private boolean isInBreak(Date screeningDateStart, String roomName, Movie movie)
     {
-        List<DateInterval> dateIntervals = new ArrayList<DateInterval>();
-
-        screeningDateStart.setMinutes(screeningDateStart.getMinutes() + movie.getMovie_length());
+        List<Interval> dateIntervals = new ArrayList<>();
         Date screeningDateEnd = new Date(screeningDateStart.getTime());
-        screeningDateEnd.setMinutes(screeningDateEnd.getMinutes() + 10);
+        screeningDateEnd.setMinutes(screeningDateEnd.getMinutes() + movie.getMovie_length());
 
-        DateInterval screeningDate = new DateInterval(screeningDateStart,screeningDateEnd);
-
-        dateIntervals.add(screeningDate);
+        Interval interval = new Interval(new DateTime(screeningDateStart),new DateTime(screeningDateEnd));
+        dateIntervals.add(interval);
 
         List<Movie> movies = StreamSupport
                 .stream(movieService.findAll().spliterator(), false)
@@ -117,30 +123,35 @@ public class ScreeningController {
 
         List<Screening> screeningList = StreamSupport
                 .stream(screeningService.findAll().spliterator(), false)
-                .filter(s -> s.getRoomName() == roomName)
+                .filter(s -> s.getRoomName().equals(roomName))
                 .collect(Collectors.toList());
 
         for (Screening screening : screeningList
         ) {
-            var optionalMovie = movies.stream().filter(m -> m.getName() == screening.getMovieName()).findFirst();
+            var optionalMovie = movies.stream().filter(m -> m.getName().equals(screening.getMovieName())).findFirst();
             if(optionalMovie.isPresent())
             {
-                var additionalScreeningDateStart= screening.getScreeningDate();
-                additionalScreeningDateStart.setMinutes(screeningDateStart.getMinutes() + movie.getMovie_length());
-                dateIntervals.add(new DateInterval(
-                        additionalScreeningDateStart,
-                        screening.addMinutes(10)));
+                Date startDateToAdd = new Date(screening.getScreeningDate().getTime());
+                startDateToAdd.setMinutes(startDateToAdd.getMinutes() + optionalMovie.get().getMovie_length());
+
+                Date endDateToAdd = new Date(startDateToAdd.getTime());
+                endDateToAdd.setMinutes(endDateToAdd.getMinutes() + 10);
+
+                dateIntervals.add(new Interval(new DateTime(startDateToAdd),new DateTime(endDateToAdd)));
             }
         }
 
-        return !calendarEventOverlapHelper.isIntervalsClean(dateIntervals);
+        var result = false;
+        if(dateIntervals.size() > 1) result = overlapping(dateIntervals);
+
+        return result;
     }
 
-    public void deleteScreening(String movieName)
+    public void deleteScreening(String movieName, String roomName, Date screeningDate)
     {
         if(userService.isLoggedInUserAdmin())
         {
-            screeningService.deleteScreening(movieName);
+            screeningService.deleteScreening(movieName, roomName, screeningDate);
         }
     }
 

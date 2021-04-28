@@ -34,7 +34,7 @@ public class MovieService {
     @Transactional
     public void createMovie(String name, String type, int movie_lenght)
     {
-        if(StreamSupport.stream(movieRepository.findAll().spliterator(), false).filter(m -> m.getName() == name).count() == 0)
+        if(StreamSupport.stream(movieRepository.findAll().spliterator(), false).filter(m -> m.getName().equals(name)).count() == 0)
         movieRepository.save(new Movie(name, type, movie_lenght));
     }
 
